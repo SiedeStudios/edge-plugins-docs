@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Suite Plugin Manager Documentation</title>
+    <meta name="description" content="Complete guide to developing plugins for Edge Suite Plugin Manager">
+    <meta name="keywords" content="Edge Suite, Laravel, Plugins, PHP, Development">
+    <link rel="icon" type="image/x-icon" href="https://edge.siedestudios.co.uk/favicon.ico">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-muted: #808080;
+            --accent-blue: #4f9cf9;
+            --border-color: #404040;
+            --hover-bg: #454545;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo i {
+            margin-right: 12px;
+            color: var(--accent-blue);
+            font-size: 32px;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .header-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .header-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        .version-badge {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Main Title */
+        .main-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .main-title h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .main-title p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 40px;
+            padding: 0;
+            list-style: none;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            font-size: 16px;
+            font-weight: 500;
+            position: relative;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .nav-tab.active {
+            color: var(--accent-blue);
+            background: var(--bg-secondary);
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-blue);
+        }
+
+        .nav-tab:hover:not(.active) {
+            color: var(--text-primary);
+            background: var(--hover-bg);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Documentation Cards */
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .doc-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 28px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-blue);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .doc-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .doc-card-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .doc-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .doc-card p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            position: relative;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-block::before {
+            content: attr(data-language);
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        .code-keyword {
+            color: #ff79c6;
+            font-weight: 500;
+        }
+
+        .code-string {
+            color: #f1fa8c;
+        }
+
+        .code-comment {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Content Sections Styling */
+        .content-text {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .content-text h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .content-text h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 24px 0 16px;
+            color: var(--text-primary);
+        }
+
+        .content-text h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 20px 0 12px;
+            color: var(--text-primary);
+        }
+
+        .content-text p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .content-text ul, .content-text ol {
+            color: var(--text-secondary);
+            margin: 16px 0 16px 24px;
+        }
+
+        .content-text li {
+            margin-bottom: 8px;
+        }
+
+        .content-text code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--accent-blue);
+        }
+
+        /* Alert Boxes */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert.info {
+            background: rgba(79, 156, 249, 0.1);
+            border-left-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--success);
+            color: var(--success);
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: var(--warning);
+            color: var(--warning);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 80px;
+            padding: 40px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+
+            .main-title h1 {
+                font-size: 32px;
+            }
+
+            .nav-tabs {
+                gap: 4px;
+            }
+
+            .nav-tab {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .doc-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .doc-card {
+                padding: 20px;
+            }
+
+            .content-text {
+                padding: 24px;
+            }
+
+            .code-block {
+                padding: 16px;
+                font-size: 12px;
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-puzzle-piece"></i>
+                    Edge Suite Plugin Manager
+                </div>
+                <div class="header-links">
+                    <a href="https://edge.siedestudios.co.uk" target="_blank">Edge Suite</a>
+                    <a href="https://github.com/SiedeStudios/Edge-Suite-Plugins" target="_blank">
+                        <i class="fab fa-github"></i> Examples
+                    </a>
+                    <div class="version-badge">v1.0.0</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Title -->
+        <div class="main-title">
+            <h1>Plugin Development Documentation</h1>
+            <p>Complete guide to creating powerful plugins for Edge Suite Plugin Manager</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav>
+            <ul class="nav-tabs">
+                <li><button class="nav-tab active" onclick="showSection('getting-started')">Getting Started</button></li>
+                <li><button class="nav-tab" onclick="showSection('plugin-structure')">Plugin Structure</button></li>
+                <li><button class="nav-tab" onclick="showSection('development')">Development Guide</button></li>
+                <li><button class="nav-tab" onclick="showSection('examples')">Examples</button></li>
+            </ul>
+        </nav>
+
+        <!-- Getting Started Section -->
+        <div id="getting-started" class="content-section active">
+            <div class="doc-grid">
+                <div class="doc-card" onclick="scrollToSection('overview')">
+                    <div class="doc-card-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Quick Start</h3>
+                    <p>Get up and running with plugin development in minutes. Learn the basics and start creating.</p>
+                </div>
+
+                <div class="doc-card" onclick="scrollToSection('features')">
+                    <div class="doc-card-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Features</h3>
+                    <p>Discover all the powerful auto-registration features available in the plugin system.</p>
+                </div>
+
+                <div class="doc-card" onclick="scrollToSection('requirements')">
+                    <div class="doc-card-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h3>Requirements</h3>
+                    <p>System requirements and dependencies needed for plugin development.</p>
+                </div>
+            </div>
+
+            <div class="content-text" id="overview">
+                <h2>Welcome to Edge Suite Plugin Manager</h2>
+                <p>The Edge Suite Plugin Manager is a powerful system that allows you to easily extend Edge Suite with custom plugins. It provides a complete solution for adding new functionality through modular, hot-swappable plugins.</p>
+
+                <h3>Key Benefits</h3>
+                <ul>
+                    <li>Easy plugin installation via ZIP upload</li>
+                    <li>Hot-swappable plugins without downtime</li>
+                    <li>Comprehensive configuration system with schemas</li>
+                    <li>Built-in security and validation</li>
+                    <li>Auto-discovery of routes, views, and assets</li>
+                    <li>Admin menu integration</li>
+                    <li>Event hooks and listeners</li>
+                </ul>
+
+                <div class="alert info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Note:</strong> Edge Suite Plugin Manager requires Laravel 10.0+ and PHP 8.1+. All plugins are installed in the <code>plugins/</code> directory.
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-text" id="features">
+                <h2>Auto-Registration Features</h2>
+                <p>The Edge Suite Plugin Manager comes with powerful auto-registration capabilities:</p>
+
+                <h3>🔧 Component Auto-Loading</h3>
+                <p>Models, Controllers, Services, and Middleware are automatically discovered and registered with Laravel's systems.</p>
+
+                <h3>⚙️ Configuration System</h3>
+                <p>Each plugin can have its own configuration schema with validation, making setup straightforward.</p>
+
+                <h3>🛣️ Route Registration</h3>
+                <p>Plugin routes are automatically registered with custom middleware, prefixes, and domains.</p>
+
+                <h3>📊 Admin Integration</h3>
+                <p>Seamless integration with Edge Suite admin panel, including menu registration and permissions.</p>
+            </div>
+
+            <div class="content-text" id="requirements">
+                <h2>System Requirements</h2>
+                <p>Before developing plugins, ensure your system meets these requirements:</p>
+
+                <h3>Minimum Requirements</h3>
+                <ul>
+                    <li><strong>Edge Suite:</strong> Latest version installed</li>
+                    <li><strong>PHP:</strong> 8.1 or higher</li>
+                    <li><strong>Laravel:</strong> 10.0 or higher</li>
+                    <li><strong>Extensions:</strong> ZIP, JSON, Fileinfo</li>
+                    <li><strong>Permissions:</strong> Write access to plugins/ directory</li>
+                </ul>
+
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Important:</strong> Ensure your server has sufficient memory and execution time for plugin operations.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plugin Structure Section -->
+        <div id="plugin-structure" class="content-section">
+            <div class="content-text">
+                <h2>Plugin File Structure</h2>
+                <p>Every plugin must follow this structure to be recognized by Edge Suite Plugin Manager:</p>
+
+                <div class="code-block" data-language="text">
+YourPluginName/
+├── plugin.json          <span class="code-comment"># REQUIRED - Plugin manifest</span>
+├── Plugin.php           <span class="code-comment"># REQUIRED - Main plugin class</span>
+├── routes.php           <span class="code-comment"># OPTIONAL - Plugin routes</span>
+├── config.json          <span class="code-comment"># OPTIONAL - Plugin configuration</span>
+├── Controllers/         <span class="code-comment"># OPTIONAL - Plugin controllers</span>
+│   └── YourController.php
+├── Models/              <span class="code-comment"># OPTIONAL - Eloquent models (auto-registered)</span>
+│   └── YourModel.php
+├── Observers/           <span class="code-comment"># OPTIONAL - Model observers (auto-registered)</span>
+│   └── YourModelObserver.php
+├── Middleware/          <span class="code-comment"># OPTIONAL - Route middleware (auto-registered)</span>
+│   └── YourMiddleware.php
+├── Services/            <span class="code-comment"># OPTIONAL - Service classes (auto-bound)</span>
+│   └── YourService.php
+├── views/               <span class="code-comment"># OPTIONAL - Plugin views</span>
+│   └── dashboard.blade.php
+├── assets/              <span class="code-comment"># OPTIONAL - CSS, JS, images</span>
+│   ├── css/
+│   ├── js/
+│   └── images/
+└── database/            <span class="code-comment"># OPTIONAL - Database related files</span>
+    └── factories/       <span class="code-comment"># OPTIONAL - Model factories (auto-loaded)</span>
+        └── YourModelFactory.php
+                </div>
+
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Important:</strong> Only <code>plugin.json</code> and <code>Plugin.php</code> are required. All other files are optional but follow conventions for auto-loading.
+                    </div>
+                </div>
+
+                <h3>Required Files</h3>
+                <p>These two files must be present in every plugin:</p>
+                <ul>
+                    <li><strong>plugin.json</strong> - Contains plugin metadata and configuration schema</li>
+                    <li><strong>Plugin.php</strong> - Main plugin class that handles initialization and lifecycle</li>
+                </ul>
+
+                <h3>Optional Files</h3>
+                <p>These files are automatically loaded if present:</p>
+                <ul>
+                    <li><strong>routes.php</strong> - Plugin routes (auto-registered with namespace and middleware)</li>
+                    <li><strong>config.json</strong> - Plugin configuration values</li>
+                    <li><strong>Controllers/</strong> - Auto-loaded with plugin namespace</li>
+                    <li><strong>Models/</strong> - Auto-registered with Eloquent and service container</li>
+                    <li><strong>Observers/</strong> - Auto-associated with models (e.g., UserObserver → User model)</li>
+                    <li><strong>Middleware/</strong> - Auto-registered as route middleware with plugin prefix</li>
+                    <li><strong>Services/</strong> - Auto-bound to Laravel service container</li>
+                    <li><strong>views/</strong> - Registered as view namespace (lowercase plugin name)</li>
+                    <li><strong>assets/</strong> - Copied to public/plugins/{plugin-name}/</li>
+                    <li><strong>database/factories/</strong> - Auto-loaded for testing and seeding</li>
+                </ul>
+
+                <div class="alert success">
+                    <i class="fas fa-magic"></i>
+                    <div>
+                        <strong>Auto-Registration:</strong> Models, Observers, Middleware, and Services are automatically registered with Laravel's container and systems. No manual registration needed!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Development Section -->
+        <div id="development" class="content-section">
+            <div class="content-text">
+                <h2>Development Guide</h2>
+                <p>Learn how to create plugins with proper configuration and structure.</p>
+
+                <h3>1. Creating plugin.json (REQUIRED)</h3>
+                <p>The manifest file defines your plugin's metadata and configuration schema:</p>
+
+                <div class="code-block" data-language="json">
+{
+    <span class="code-comment">// REQUIRED FIELDS</span>
+    <span class="code-string">"name"</span>: <span class="code-string">"YourPluginName"</span>,
+    <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
+    
+    <span class="code-comment">// OPTIONAL FIELDS</span>
+    <span class="code-string">"display_name"</span>: <span class="code-string">"Your Plugin Display Name"</span>,
+    <span class="code-string">"description"</span>: <span class="code-string">"What your plugin does"</span>,
+    <span class="code-string">"author"</span>: <span class="code-string">"Your Name"</span>,
+    <span class="code-string">"namespace"</span>: <span class="code-string">"Plugins\\YourPluginName"</span>,
+    
+    <span class="code-comment">// ROUTE CONFIGURATION</span>
+    <span class="code-string">"routes"</span>: {
+        <span class="code-string">"prefix"</span>: <span class="code-string">"your-plugin"</span>,
+        <span class="code-string">"middleware"</span>: [<span class="code-string">"web"</span>, <span class="code-string">"auth"</span>]
+    },
+    
+    <span class="code-comment">// CONFIGURATION SCHEMA</span>
+    <span class="code-string">"config_schema"</span>: {
+        <span class="code-string">"enabled"</span>: {
+            <span class="code-string">"type"</span>: <span class="code-string">"boolean"</span>,
+            <span class="code-string">"default"</span>: <span class="code-keyword">true</span>,
+            <span class="code-string">"label"</span>: <span class="code-string">"Enable Plugin"</span>
+        }
+    }
+}
+                </div>
+
+                <h3>2. Creating Plugin.php (REQUIRED)</h3>
+                <p>The main plugin class handles initialization and lifecycle events:</p>
+
+                <div class="code-block" data-language="php">
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\YourPluginName;
+
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Log;
+
+<span class="code-keyword">class</span> Plugin
+{
+    <span class="code-keyword">protected</span> $pluginPath;
+    <span class="code-keyword">protected</span> $manifest;
+    <span class="code-keyword">protected</span> $config;
+
+    <span class="code-comment">// REQUIRED - Constructor called on plugin load</span>
+    <span class="code-keyword">public function</span> __construct($pluginPath, $manifest)
+    {
+        $this->pluginPath = $pluginPath;
+        $this->manifest = $manifest;
+        $this->config = $this->loadConfig();
+        
+        $this->init();
+    }
+
+    <span class="code-comment">// Initialize your plugin</span>
+    <span class="code-keyword">protected function</span> init()
+    {
+        Log::info(<span class="code-string">'Your Plugin initialized'</span>);
+    }
+
+    <span class="code-comment">// OPTIONAL - Load plugin configuration</span>
+    <span class="code-keyword">protected function</span> loadConfig()
+    {
+        $configPath = $this->pluginPath . <span class="code-string">'/config.json'</span>;
+        <span class="code-keyword">if</span> (file_exists($configPath)) {
+            <span class="code-keyword">return</span> json_decode(file_get_contents($configPath), <span class="code-keyword">true</span>) ?: [];
+        }
+        <span class="code-keyword">return</span> [<span class="code-string">'enabled'</span> => <span class="code-keyword">true</span>];
+    }
+
+    <span class="code-comment">// OPTIONAL - Called when plugin is activated</span>
+    <span class="code-keyword">public function</span> onActivate()
+    {
+        Log::info(<span class="code-string">'Your Plugin activated'</span>);
+    }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Section -->
+        <div id="examples" class="content-section">
+            <div class="content-text">
+                <h2>Plugin Examples</h2>
+                <p>Real-world examples to help you get started with plugin development.</p>
+
+                <div class="alert info">
+                    <i class="fas fa-github"></i>
+                    <div>
+                        <strong>Live Examples:</strong> Check out complete working examples in our <a href="https://github.com/SiedeStudios/Edge-Suite-Plugins" target="_blank" style="color: var(--accent-blue);">GitHub repository</a>.
+                    </div>
+                </div>
+
+                <h3>Example 1: Simple Dashboard Plugin</h3>
+                <p>A basic plugin that adds a custom dashboard to Edge Suite:</p>
+
+                <div class="code-block" data-language="json">
+{
+    <span class="code-string">"name"</span>: <span class="code-string">"CustomDashboard"</span>,
+    <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
+    <span class="code-string">"display_name"</span>: <span class="code-string">"Custom Dashboard"</span>,
+    <span class="code-string">"description"</span>: <span class="code-string">"Adds a custom analytics dashboard"</span>,
+    <span class="code-string">"routes"</span>: {
+        <span class="code-string">"prefix"</span>: <span class="code-string">"custom-dashboard"</span>,
+        <span class="code-string">"middleware"</span>: [<span class="code-string">"web"</span>, <span class="code-string">"auth"</span>]
+    }
+}
+                </div>
+
+                <h3>Example 2: API Integration Plugin</h3>
+                <p>A more complex plugin that integrates with external APIs:</p>
+
+                <div class="code-block" data-language="json">
+{
+    <span class="code-string">"name"</span>: <span class="code-string">"WeatherWidget"</span>,
+    <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
+    <span class="code-string">"display_name"</span>: <span class="code-string">"Weather Widget"</span>,
+    <span class="code-string">"description"</span>: <span class="code-string">"Displays weather information from external API"</span>,
+    <span class="code-string">"config_schema"</span>: {
+        <span class="code-string">"api_key"</span>: {
+            <span class="code-string">"type"</span>: <span class="code-string">"string"</span>,
+            <span class="code-string">"label"</span>: <span class="code-string">"Weather API Key"</span>,
+            <span class="code-string">"required"</span>: <span class="code-keyword">true</span>
+        },
+        <span class="code-string">"location"</span>: {
+            <span class="code-string">"type"</span>: <span class="code-string">"string"</span>,
+            <span class="code-string">"default"</span>: <span class="code-string">"London"</span>,
+            <span class="code-string">"label"</span>: <span class="code-string">"Default Location"</span>
+        }
+    }
+}
+                </div>
+
+                <h3>Installation Process</h3>
+                <p>To install and test your plugins:</p>
+                <ol>
+                    <li>Create your plugin folder with the required files</li>
+                    <li>Test locally in your Edge Suite development environment</li>
+                    <li>Zip the entire plugin folder</li>
+                    <li>Upload via Edge Suite admin panel</li>
+                    <li>Activate and configure your plugin</li>
+                </ol>
+
+                <div class="alert success">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>Best Practice:</strong> Start with minimal functionality and gradually add features. The auto-registration system handles all the complex setup automatically!
+                    </div>
+                </div>
+
+                <h3>Next Steps</h3>
+                <p>Ready to start building? Here are some resources:</p>
+                <ul>
+                    <li><a href="https://github.com/SiedeStudios/Edge-Suite-Plugins" target="_blank" style="color: var(--accent-blue);">Browse example plugins</a> for inspiration</li>
+                    <li>Check the Edge Suite community for plugin ideas</li>
+                    <li>Join our Discord for development support</li>
+                    <li>Share your plugins with the Edge Suite community</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Edge Suite Plugin Manager Documentation</p>
+            <div class="footer-links">
+                <a href="https://edge.siedestudios.co.uk" target="_blank">Edge Suite</a>
+                <a href="https://github.com/SiedeStudios/Edge-Suite-Plugins" target="_blank">GitHub Examples</a>
+                <a href="https://siedestudios.co.uk" target="_blank">Siede Studios</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Scroll to specific section within content
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Add smooth hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.doc-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Add copy functionality to code blocks
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                const button = document.createElement('button');
+                button.innerHTML = '<i class="fas fa-copy"></i>';
+                button.style.cssText = `
+                    position: absolute;
+                    top: 12px;
+                    right: 45px;
+                    background: var(--hover-bg);
+                    border: none;
+                    color: var(--text-secondary);
+                    padding: 8px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                    z-index: 2;
+                `;
+                
+                block.style.position = 'relative';
+                block.appendChild(button);
+                
+                block.addEventListener('mouseenter', () => {
+                    button.style.opacity = '1';
+                });
+                
+                block.addEventListener('mouseleave', () => {
+                    button.style.opacity = '0';
+                });
+                
+                button.addEventListener('click', async () => {
+                    try {
+                        const textContent = block.textContent.replace(/^(JSON|PHP|TEXT)\s*/, '');
+                        await navigator.clipboard.writeText(textContent);
+                        
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.style.background = 'var(--success)';
+                        button.style.color = 'white';
+                        
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i>';
+                            button.style.background = 'var(--hover-bg)';
+                            button.style.color = 'var(--text-secondary)';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                });
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                const activeTab = document.querySelector('.nav-tab.active');
+                const tabs = document.querySelectorAll('.nav-tab');
+                const currentIndex = Array.from(tabs).indexOf(activeTab);
+                
+                if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                    e.preventDefault();
+                    tabs[currentIndex - 1].click();
+                } else if (e.key === 'ArrowRight' && currentIndex < tabs.length - 1) {
+                    e.preventDefault();
+                    tabs[currentIndex + 1].click();
+                }
+            }
+        });
+
+        // Add analytics (optional)
+        if (typeof gtag !== 'undefined') {
+            gtag('config', 'GA_MEASUREMENT_ID', {
+                page_title: 'Edge Suite Plugin Documentation',
+                page_location: window.location.href
+            });
+        }
+    </script>
+</body>
+</html>
