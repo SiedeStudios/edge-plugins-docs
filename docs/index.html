@@ -508,6 +508,7 @@
             <ul class="nav-tabs">
                 <li><button class="nav-tab active" onclick="showSection('getting-started')">Getting Started</button></li>
                 <li><button class="nav-tab" onclick="showSection('plugin-structure')">Plugin Structure</button></li>
+                <li><button class="nav-tab" onclick="showSection('lifecycle-hooks')">Lifecycle Hooks</button></li>
                 <li><button class="nav-tab" onclick="showSection('development')">Development Guide</button></li>
                 <li><button class="nav-tab" onclick="showSection('examples')">Examples</button></li>
             </ul>
@@ -554,6 +555,7 @@
                     <li>Auto-discovery of routes, views, and assets</li>
                     <li>Admin menu integration</li>
                     <li>Event hooks and listeners</li>
+                    <li><strong>NEW:</strong> Lifecycle hooks for installation, activation, and cleanup</li>
                 </ul>
 
                 <div class="alert info">
@@ -579,6 +581,9 @@
 
                 <h3>📊 Admin Integration</h3>
                 <p>Seamless integration with Edge Suite admin panel, including menu registration and permissions.</p>
+
+                <h3>🔄 Lifecycle Management</h3>
+                <p>Built-in lifecycle hooks allow plugins to perform setup, cleanup, and validation operations during install, activate, deactivate, and uninstall events.</p>
             </div>
 
             <div class="content-text" id="requirements">
@@ -674,6 +679,153 @@ YourPluginName/
             </div>
         </div>
 
+        <!-- Lifecycle Hooks Section -->
+        <div id="lifecycle-hooks" class="content-section">
+            <div class="content-text">
+                <h2>Plugin Lifecycle Hooks</h2>
+                <p>Edge Suite Plugin Manager provides powerful lifecycle hooks that allow your plugins to execute custom logic during important events like installation, activation, deactivation, and uninstallation.</p>
+
+                <h3>Available Lifecycle Hooks</h3>
+                <p>Your Plugin.php class can implement any of these optional hook methods:</p>
+
+                <div class="code-block" data-language="php">
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\YourPluginName;
+
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Log;
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Schema;
+<span class="code-keyword">use</span> Illuminate\Database\Schema\Blueprint;
+
+<span class="code-keyword">class</span> Plugin
+{
+    <span class="code-keyword">protected</span> $pluginPath;
+    <span class="code-keyword">protected</span> $manifest;
+
+    <span class="code-keyword">public function</span> __construct($pluginPath, $manifest)
+    {
+        $this->pluginPath = $pluginPath;
+        $this->manifest = $manifest;
+    }
+
+    <span class="code-comment">// Called when plugin is first installed</span>
+    <span class="code-keyword">public function</span> onInstall()
+    {
+        Log::info(<span class="code-string">'Plugin installed: Creating database tables...'</span>);
+        
+        <span class="code-comment">// Create database tables</span>
+        Schema::create(<span class="code-string">'your_plugin_table'</span>, <span class="code-keyword">function</span> (Blueprint $table) {
+            $table->id();
+            $table->string(<span class="code-string">'name'</span>);
+            $table->timestamps();
+        });
+        
+        <span class="code-comment">// Copy default configuration files</span>
+        <span class="code-comment">// Set up initial data</span>
+        
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
+    <span class="code-comment">// Called when plugin is activated</span>
+    <span class="code-keyword">public function</span> onActivate()
+    {
+        Log::info(<span class="code-string">'Plugin activated: Registering services...'</span>);
+        
+        <span class="code-comment">// Register event listeners</span>
+        <span class="code-comment">// Schedule tasks</span>
+        <span class="code-comment">// Enable features</span>
+        
+        <span class="code-comment">// Return false to cancel activation</span>
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
+    <span class="code-comment">// Called when plugin is deactivated</span>
+    <span class="code-keyword">public function</span> onDeactivate()
+    {
+        Log::info(<span class="code-string">'Plugin deactivated: Cleaning up...'</span>);
+        
+        <span class="code-comment">// Remove event listeners</span>
+        <span class="code-comment">// Cancel scheduled tasks</span>
+        <span class="code-comment">// Disable features</span>
+    }
+
+    <span class="code-comment">// Called before plugin is uninstalled</span>
+    <span class="code-keyword">public function</span> onUninstall()
+    {
+        Log::info(<span class="code-string">'Plugin uninstalling: Removing data...'</span>);
+        
+        <span class="code-comment">// Drop database tables</span>
+        Schema::dropIfExists(<span class="code-string">'your_plugin_table'</span>);
+        
+        <span class="code-comment">// Remove configuration files</span>
+        <span class="code-comment">// Clean up any remaining data</span>
+    }
+}
+                </div>
+
+                <h3>Hook Execution Order</h3>
+                <p>Understanding when each hook is called:</p>
+
+                <h4>🟢 Installation Process</h4>
+                <ol>
+                    <li>Plugin files are extracted and validated</li>
+                    <li><code>onInstall()</code> hook is called</li>
+                    <li>Plugin is registered but remains inactive</li>
+                </ol>
+
+                <h4>🟢 Activation Process</h4>
+                <ol>
+                    <li>Plugin validation checks pass</li>
+                    <li>Plugin is loaded (classes, routes, views registered)</li>
+                    <li><code>onActivate()</code> hook is called</li>
+                    <li>If hook returns <code>false</code>, activation is cancelled</li>
+                    <li>Admin menus are registered</li>
+                    <li>Caches are refreshed</li>
+                </ol>
+
+                <h4>🔴 Deactivation Process</h4>
+                <ol>
+                    <li><code>onDeactivate()</code> hook is called</li>
+                    <li>Plugin models are cleared</li>
+                    <li>Admin menus are removed</li>
+                    <li>Caches are refreshed</li>
+                </ol>
+
+                <h4>🔴 Uninstallation Process</h4>
+                <ol>
+                    <li><code>onUninstall()</code> hook is called</li>
+                    <li>Plugin is deactivated (if active)</li>
+                    <li>All plugin files are removed</li>
+                    <li>Public assets are removed</li>
+                    <li>Caches are cleared</li>
+                </ol>
+
+                <div class="alert info">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>Pro Tip:</strong> Use <code>onActivate()</code> to return <code>false</code> if your plugin requirements aren't met, preventing activation until issues are resolved.
+                    </div>
+                </div>
+
+                <h3>Hook Best Practices</h3>
+                <ul>
+                    <li><strong>Keep hooks fast:</strong> Avoid long-running operations that could timeout</li>
+                    <li><strong>Use transactions:</strong> Wrap database operations in transactions for safety</li>
+                    <li><strong>Handle errors gracefully:</strong> Use try-catch blocks and return appropriate values</li>
+                    <li><strong>Log important actions:</strong> Help administrators troubleshoot issues</li>
+                    <li><strong>Check dependencies:</strong> Validate requirements before proceeding</li>
+                    <li><strong>Clean up thoroughly:</strong> Remove all traces during uninstall</li>
+                </ul>
+
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Warning:</strong> Lifecycle hooks run with elevated privileges. Always validate input and sanitize data to prevent security issues.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Development Section -->
         <div id="development" class="content-section">
             <div class="content-text">
@@ -721,6 +873,7 @@ YourPluginName/
 <span class="code-keyword">namespace</span> Plugins\YourPluginName;
 
 <span class="code-keyword">use</span> Illuminate\Support\Facades\Log;
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Schema;
 
 <span class="code-keyword">class</span> Plugin
 {
@@ -754,12 +907,89 @@ YourPluginName/
         <span class="code-keyword">return</span> [<span class="code-string">'enabled'</span> => <span class="code-keyword">true</span>];
     }
 
-    <span class="code-comment">// OPTIONAL - Called when plugin is activated</span>
+    <span class="code-comment">// LIFECYCLE HOOKS - All optional</span>
+    
+    <span class="code-keyword">public function</span> onInstall()
+    {
+        Log::info(<span class="code-string">'Setting up database tables...'</span>);
+        <span class="code-comment">// Create tables, copy files, etc.</span>
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
     <span class="code-keyword">public function</span> onActivate()
     {
-        Log::info(<span class="code-string">'Your Plugin activated'</span>);
+        Log::info(<span class="code-string">'Plugin activated successfully'</span>);
+        <span class="code-comment">// Register services, enable features</span>
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>; <span class="code-comment">// Return false to cancel activation</span>
+    }
+
+    <span class="code-keyword">public function</span> onDeactivate()
+    {
+        Log::info(<span class="code-string">'Plugin deactivated'</span>);
+        <span class="code-comment">// Clean up, disable features</span>
+    }
+
+    <span class="code-keyword">public function</span> onUninstall()
+    {
+        Log::info(<span class="code-string">'Removing plugin data...'</span>);
+        <span class="code-comment">// Drop tables, remove files</span>
     }
 }
+                </div>
+
+                <h3>3. Advanced Features</h3>
+                <p>Take advantage of auto-registration features:</p>
+
+                <h4>Models (Auto-Registered)</h4>
+                <p>Create models in <code>Models/</code> directory - they're automatically registered with Laravel's service container:</p>
+
+                <div class="code-block" data-language="php">
+<span class="code-comment">// Models/YourModel.php</span>
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\YourPluginName\Models;
+
+<span class="code-keyword">use</span> Illuminate\Database\Eloquent\Model;
+
+<span class="code-keyword">class</span> YourModel <span class="code-keyword">extends</span> Model
+{
+    <span class="code-keyword">protected</span> $table = <span class="code-string">'your_plugin_table'</span>;
+    <span class="code-keyword">protected</span> $fillable = [<span class="code-string">'name'</span>, <span class="code-string">'description'</span>];
+}
+                </div>
+
+                <h4>Controllers (Auto-Loaded)</h4>
+                <p>Controllers are automatically loaded with your plugin's namespace:</p>
+
+                <div class="code-block" data-language="php">
+<span class="code-comment">// Controllers/DashboardController.php</span>
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\YourPluginName\Controllers;
+
+<span class="code-keyword">use</span> Illuminate\Http\Request;
+<span class="code-keyword">use</span> App\Http\Controllers\Controller;
+
+<span class="code-keyword">class</span> DashboardController <span class="code-keyword">extends</span> Controller
+{
+    <span class="code-keyword">public function</span> index()
+    {
+        <span class="code-keyword">return</span> view(<span class="code-string">'yourpluginname::dashboard'</span>);
+    }
+}
+                </div>
+
+                <h4>Routes (Auto-Registered)</h4>
+                <p>Create <code>routes.php</code> and they're automatically registered with your namespace:</p>
+
+                <div class="code-block" data-language="php">
+<span class="code-comment">// routes.php</span>
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Route;
+
+Route::get(<span class="code-string">'/'</span>, <span class="code-string">'DashboardController@index'</span>)->name(<span class="code-string">'dashboard'</span>);
+Route::get(<span class="code-string">'/settings'</span>, <span class="code-string">'DashboardController@settings'</span>)->name(<span class="code-string">'settings'</span>);
                 </div>
             </div>
         </div>
@@ -777,24 +1007,73 @@ YourPluginName/
                     </div>
                 </div>
 
-                <h3>Example 1: Simple Dashboard Plugin</h3>
-                <p>A basic plugin that adds a custom dashboard to Edge Suite:</p>
+                <h3>Example 1: Database Plugin with Lifecycle Hooks</h3>
+                <p>A plugin that creates its own database table and manages data:</p>
 
-                <div class="code-block" data-language="json">
+                <div class="code-block" data-language="php">
+<span class="code-comment">// Plugin.php</span>
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\TaskManager;
+
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Schema;
+<span class="code-keyword">use</span> Illuminate\Database\Schema\Blueprint;
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Log;
+
+<span class="code-keyword">class</span> Plugin
 {
-    <span class="code-string">"name"</span>: <span class="code-string">"CustomDashboard"</span>,
-    <span class="code-string">"version"</span>: <span class="code-string">"1.0.0"</span>,
-    <span class="code-string">"display_name"</span>: <span class="code-string">"Custom Dashboard"</span>,
-    <span class="code-string">"description"</span>: <span class="code-string">"Adds a custom analytics dashboard"</span>,
-    <span class="code-string">"routes"</span>: {
-        <span class="code-string">"prefix"</span>: <span class="code-string">"custom-dashboard"</span>,
-        <span class="code-string">"middleware"</span>: [<span class="code-string">"web"</span>, <span class="code-string">"auth"</span>]
+    <span class="code-keyword">protected</span> $pluginPath;
+    <span class="code-keyword">protected</span> $manifest;
+
+    <span class="code-keyword">public function</span> __construct($pluginPath, $manifest)
+    {
+        $this->pluginPath = $pluginPath;
+        $this->manifest = $manifest;
+    }
+
+    <span class="code-keyword">public function</span> onInstall()
+    {
+        <span class="code-comment">// Create tasks table on install</span>
+        Schema::create(<span class="code-string">'plugin_tasks'</span>, <span class="code-keyword">function</span> (Blueprint $table) {
+            $table->id();
+            $table->string(<span class="code-string">'title'</span>);
+            $table->text(<span class="code-string">'description'</span>)->nullable();
+            $table->boolean(<span class="code-string">'completed'</span>)->default(<span class="code-keyword">false</span>);
+            $table->timestamps();
+        });
+
+        Log::info(<span class="code-string">'Task Manager: Database table created'</span>);
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
+    <span class="code-keyword">public function</span> onActivate()
+    {
+        <span class="code-comment">// Check if table exists before activation</span>
+        <span class="code-keyword">if</span> (!Schema::hasTable(<span class="code-string">'plugin_tasks'</span>)) {
+            Log::error(<span class="code-string">'Task Manager: Required table missing'</span>);
+            <span class="code-keyword">return</span> <span class="code-keyword">false</span>; <span class="code-comment">// Cancel activation</span>
+        }
+
+        Log::info(<span class="code-string">'Task Manager: Plugin activated'</span>);
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
+    <span class="code-keyword">public function</span> onDeactivate()
+    {
+        Log::info(<span class="code-string">'Task Manager: Plugin deactivated'</span>);
+    }
+
+    <span class="code-keyword">public function</span> onUninstall()
+    {
+        <span class="code-comment">// Clean up: drop table on uninstall</span>
+        Schema::dropIfExists(<span class="code-string">'plugin_tasks'</span>);
+        Log::info(<span class="code-string">'Task Manager: Database table removed'</span>);
     }
 }
                 </div>
 
-                <h3>Example 2: API Integration Plugin</h3>
-                <p>A more complex plugin that integrates with external APIs:</p>
+                <h3>Example 2: API Integration with Configuration</h3>
+                <p>A weather plugin that uses external APIs and configuration:</p>
 
                 <div class="code-block" data-language="json">
 {
@@ -812,7 +1091,78 @@ YourPluginName/
             <span class="code-string">"type"</span>: <span class="code-string">"string"</span>,
             <span class="code-string">"default"</span>: <span class="code-string">"London"</span>,
             <span class="code-string">"label"</span>: <span class="code-string">"Default Location"</span>
+        },
+        <span class="code-string">"cache_duration"</span>: {
+            <span class="code-string">"type"</span>: <span class="code-string">"integer"</span>,
+            <span class="code-string">"default"</span>: 300,
+            <span class="code-string">"label"</span>: <span class="code-string">"Cache Duration (seconds)"</span>
         }
+    }
+}
+                </div>
+
+                <div class="code-block" data-language="php">
+<span class="code-comment">// Plugin.php</span>
+<span class="code-keyword">&lt;?php</span>
+
+<span class="code-keyword">namespace</span> Plugins\WeatherWidget;
+
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Http;
+<span class="code-keyword">use</span> Illuminate\Support\Facades\Log;
+
+<span class="code-keyword">class</span> Plugin
+{
+    <span class="code-keyword">protected</span> $pluginPath;
+    <span class="code-keyword">protected</span> $manifest;
+    <span class="code-keyword">protected</span> $config;
+
+    <span class="code-keyword">public function</span> __construct($pluginPath, $manifest)
+    {
+        $this->pluginPath = $pluginPath;
+        $this->manifest = $manifest;
+        $this->config = $this->loadConfig();
+    }
+
+    <span class="code-keyword">protected function</span> loadConfig()
+    {
+        $configPath = $this->pluginPath . <span class="code-string">'/config.json'</span>;
+        <span class="code-keyword">if</span> (file_exists($configPath)) {
+            <span class="code-keyword">return</span> json_decode(file_get_contents($configPath), <span class="code-keyword">true</span>) ?: [];
+        }
+        <span class="code-keyword">return</span> [];
+    }
+
+    <span class="code-keyword">public function</span> onActivate()
+    {
+        <span class="code-comment">// Validate API key before activation</span>
+        <span class="code-keyword">if</span> (empty($this->config[<span class="code-string">'api_key'</span>])) {
+            Log::error(<span class="code-string">'Weather Widget: API key required'</span>);
+            <span class="code-keyword">return</span> <span class="code-keyword">false</span>;
+        }
+
+        <span class="code-comment">// Test API connection</span>
+        <span class="code-keyword">try</span> {
+            $response = Http::get(<span class="code-string">'https://api.openweathermap.org/data/2.5/weather'</span>, [
+                <span class="code-string">'q'</span> => $this->config[<span class="code-string">'location'</span>] ?? <span class="code-string">'London'</span>,
+                <span class="code-string">'appid'</span> => $this->config[<span class="code-string">'api_key'</span>]
+            ]);
+
+            <span class="code-keyword">if</span> ($response->failed()) {
+                Log::error(<span class="code-string">'Weather Widget: API connection failed'</span>);
+                <span class="code-keyword">return</span> <span class="code-keyword">false</span>;
+            }
+        } <span class="code-keyword">catch</span> (\Exception $e) {
+            Log::error(<span class="code-string">'Weather Widget: '</span> . $e->getMessage());
+            <span class="code-keyword">return</span> <span class="code-keyword">false</span>;
+        }
+
+        Log::info(<span class="code-string">'Weather Widget: Successfully activated'</span>);
+        <span class="code-keyword">return</span> <span class="code-keyword">true</span>;
+    }
+
+    <span class="code-keyword">public function</span> onDeactivate()
+    {
+        Log::info(<span class="code-string">'Weather Widget: Deactivated'</span>);
     }
 }
                 </div>
@@ -824,13 +1174,14 @@ YourPluginName/
                     <li>Test locally in your Edge Suite development environment</li>
                     <li>Zip the entire plugin folder</li>
                     <li>Upload via Edge Suite admin panel</li>
-                    <li>Activate and configure your plugin</li>
+                    <li>Configure plugin settings (if required)</li>
+                    <li>Activate and test your plugin</li>
                 </ol>
 
                 <div class="alert success">
                     <i class="fas fa-lightbulb"></i>
                     <div>
-                        <strong>Best Practice:</strong> Start with minimal functionality and gradually add features. The auto-registration system handles all the complex setup automatically!
+                        <strong>Best Practice:</strong> Use lifecycle hooks to validate requirements and fail gracefully if conditions aren't met. This prevents broken activations!
                     </div>
                 </div>
 
