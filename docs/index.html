@@ -6,7 +6,8 @@
     <title>Edge Suite Plugin Manager Documentation</title>
     <meta name="description" content="Complete guide to developing plugins for Edge Suite Plugin Manager">
     <meta name="keywords" content="Edge Suite, Laravel, Plugins, PHP, Development">
-    <link rel="icon" type="image/x-icon" href="https://edge.siedestudios.co.uk/favicon.ico">
+    <link rel="icon" type="image/png" href="https://edge.siedestudios.co.uk/images/logo.png">
+    <link rel="apple-touch-icon" href="https://edge.siedestudios.co.uk/images/logo.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -67,10 +68,21 @@
             color: var(--text-primary);
         }
 
-        .logo i {
+        .logo img {
             margin-right: 12px;
-            color: var(--accent-blue);
-            font-size: 32px;
+            height: 40px;
+            width: auto;
+            filter: brightness(1.1);
+            transition: filter 0.3s ease;
+        }
+
+        .logo img:hover {
+            filter: brightness(1.3);
+        }
+
+        .logo img:not([src]),
+        .logo img[src=""] {
+            display: none;
         }
 
         .header-links {
@@ -421,6 +433,10 @@
                 font-size: 24px;
             }
 
+            .logo img {
+                height: 32px;
+            }
+
             .main-title h1 {
                 font-size: 32px;
             }
@@ -484,7 +500,7 @@
         <header class="header">
             <div class="header-content">
                 <div class="logo">
-                    <i class="fas fa-puzzle-piece"></i>
+                    <img src="https://edge.siedestudios.co.uk/images/logo.png" alt="Edge Suite Logo" loading="eager">
                     Edge Suite Plugin Manager
                 </div>
                 <div class="header-links">
@@ -492,7 +508,7 @@
                     <a href="https://github.com/SiedeStudios/Edge-Suite-Plugins" target="_blank">
                         <i class="fab fa-github"></i> Examples
                     </a>
-                    <div class="version-badge">v1.0.3</div>
+                    <div class="version-badge">v1.0.0</div>
                 </div>
             </div>
         </header>
@@ -1242,6 +1258,19 @@ Route::get(<span class="code-string">'/settings'</span>, <span class="code-strin
 
         // Add smooth hover effects
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle logo image loading
+            const logoImg = document.querySelector('.logo img');
+            if (logoImg) {
+                logoImg.addEventListener('error', function() {
+                    // Fallback to Font Awesome icon if image fails to load
+                    this.style.display = 'none';
+                    const fallbackIcon = document.createElement('i');
+                    fallbackIcon.className = 'fas fa-puzzle-piece';
+                    fallbackIcon.style.cssText = 'margin-right: 12px; color: var(--accent-blue); font-size: 32px;';
+                    this.parentNode.insertBefore(fallbackIcon, this);
+                });
+            }
+
             const cards = document.querySelectorAll('.doc-card');
             
             cards.forEach(card => {
